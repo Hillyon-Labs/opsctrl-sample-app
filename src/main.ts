@@ -5,6 +5,7 @@ import { AppExceptionFilter } from './common/filters/exception.filter';
 import { enableAppConfig } from './config/ignition.config';
 import { setupSwagger } from './config/swagger.config';
 import { LoggerService } from './common/services/logger.service';
+import { logStartupSuccess } from './common/utils/banner.util';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -20,8 +21,9 @@ async function bootstrap() {
   // Use custom logger
   app.useLogger(logger);
 
-  const appPort = appConfig.app.port;
-  const appName = appConfig.app.name;
+  const appPort = appConfig.app.port ?? 3000;
+  const appName = appConfig.app.name ?? 'NestJS Backend Template';
+  const appEnv = appConfig.app.env ?? 'development';
 
   await enableAppConfig(app);
 
@@ -33,16 +35,8 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 
-  // Log startup success
-  logger.log(
-    `\n🚀 Application started successfully!\n` +
-      `   Name: ${appName}\n` +
-      `   Port: ${appPort}\n` +
-      `   Environment: ${appConfig.app.env}\n` +
-      `   Node Version: ${process.version}\n` +
-      `   PID: ${process.pid}\n` +
-      `   Swagger: http://localhost:${appPort}/api/docs\n`,
-  );
+  // Log startup success with nice formatted banner
+  logStartupSuccess(appName, appPort, appEnv, '/api/docs');
 
   // Log startup completion (audit log only)
   logger.logAudit({
@@ -51,7 +45,7 @@ async function bootstrap() {
     metadata: {
       appName,
       port: appPort,
-      environment: appConfig.app.env,
+      environment: appEnv,
       nodeVersion: process.version,
       pid: process.pid,
     },
