@@ -14,7 +14,7 @@
     "lint": "eslint \"{src}/**/*.{ts,js}\" --fix --max-warnings 20",
     "typecheck": "tsc --noEmit",
     "migration:generate": "npm run build && typeorm-ts-node-commonjs migration:generate -d ./data-source.ts",
-    "migration:run": "npm run build && typeorm-ts-node-commonjs migration:run -d ./dist/data-source.js",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d ./data-source.ts",
     "migration:revert": "npm run build && node dist/data-source.js migration:revert",
     "docker:dev:up": "docker-compose up -d --wait",
     "docker:dev:down": "docker-compose down -v"

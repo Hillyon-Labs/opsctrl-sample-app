@@ -3,6 +3,8 @@ import { config } from 'dotenv';
 
 config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 export default new DataSource({
   type: 'postgres',
   host: process.env.DATABASE_HOST || 'localhost',
@@ -11,7 +13,7 @@ export default new DataSource({
   password: process.env.DATABASE_PASSWORD || 'password',
   database: process.env.DATABASE_NAME || 'sample_app',
   url: process.env.DATABASE_URL,
-  entities: ['src/**/*.entity.ts'],
-  migrations: ['src/migrations/*.ts'],
+  entities: [isProduction ? 'dist/**/*.entity.js' : 'src/**/*.entity.ts'],
+  migrations: [isProduction ? 'dist/migrations/*.js' : 'src/migrations/*.ts'],
   synchronize: false,
 });
