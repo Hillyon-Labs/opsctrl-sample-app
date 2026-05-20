@@ -9,7 +9,6 @@ import { LoggerService } from './common/services/logger.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
-    bodyParser: false,
   });
 
   const appConfig = app.get(AppConfigService);
