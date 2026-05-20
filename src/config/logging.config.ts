@@ -1,7 +1,6 @@
 import { LogLevel } from '@nestjs/common';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
-import chalk from 'chalk';
 
 export interface LoggingConfig {
   level: LogLevel;
@@ -38,8 +37,8 @@ export const loggingConfig = (): LoggingConfig => ({
   correlationIdHeader: process.env.LOG_CORRELATION_HEADER || 'x-correlation-id',
 });
 
-// Log level symbols and colors
-const LOG_SYMBOLS = {
+// Log level symbols
+const LOG_SYMBOLS: Record<string, string> = {
   error: '❌',
   warn: '⚠️ ',
   info: 'ℹ️ ',
@@ -47,12 +46,13 @@ const LOG_SYMBOLS = {
   verbose: '📝',
 };
 
-const LOG_COLORS = {
-  error: chalk.red,
-  warn: chalk.yellow,
-  info: chalk.green,
-  debug: chalk.blue,
-  verbose: chalk.gray,
+const identity = (s: unknown) => String(s);
+const LOG_COLORS: Record<string, (s: unknown) => string> = {
+  error: identity,
+  warn: identity,
+  info: identity,
+  debug: identity,
+  verbose: identity,
 };
 
 // Filter out noisy startup logs
@@ -77,7 +77,7 @@ const createFilterFormat = () => {
   })();
 };
 
-// Create beautiful development format
+// Create development format (plain text, no colors)
 const createDevFormat = () => {
   return winston.format.printf(
     ({
@@ -89,55 +89,32 @@ const createDevFormat = () => {
       type,
       ...meta
     }: any) => {
-      const time = chalk.gray(
-        String(timestamp).split(' ')[1] || String(timestamp),
-      ); // Only show time, not date
+      const time = String(timestamp).split(' ')[1] || String(timestamp);
       const symbol = LOG_SYMBOLS[level] || '';
-      const colorFn = LOG_COLORS[level] || chalk.white;
+      const colorFn = LOG_COLORS[level] || identity;
 
-      // Handle different log types with special formatting
       if (type === 'request') {
-        const method = chalk.bold(String(meta.method || ''));
-        const url = chalk.cyan(String(meta.url || ''));
         const statusCode = Number(meta.statusCode) || 0;
-        const status =
-          statusCode >= 400 ? chalk.red(statusCode) : chalk.green(statusCode);
-        const responseTime = chalk.yellow(`${meta.responseTime || 0}ms`);
-        return `${time} 🌐 ${method} ${url} ${status} ${responseTime}`;
+        return `${time} 🌐 ${meta.method || ''} ${meta.url || ''} ${statusCode} ${meta.responseTime || 0}ms`;
       }
 
       if (type === 'audit') {
-        const action = chalk.magenta(String(meta.action || ''));
-        const resource = chalk.cyan(String(meta.resource || ''));
-        return `${time} 📋 ${action} ${resource}`;
+        return `${time} 📋 ${meta.action || ''} ${meta.resource || ''}`;
       }
 
       if (type === 'performance') {
-        const operation = chalk.blue(String(meta.operation || ''));
-        const durationMs = Number(meta.duration) || 0;
-        const duration =
-          durationMs > 1000
-            ? chalk.red(`${durationMs}ms`)
-            : chalk.green(`${durationMs}ms`);
         const success = meta.success ? '✅' : '❌';
-        return `${time} ⚡ ${operation} ${duration} ${success}`;
+        return `${time} ⚡ ${meta.operation || ''} ${meta.duration || 0}ms ${success}`;
       }
 
       if (type === 'authentication') {
-        const action = chalk.magenta(String(meta.action || ''));
-        const userId = meta.userId
-          ? chalk.blue(`[${String(meta.userId)}]`)
-          : '';
-        return `${time} 🔐 ${action} ${userId}`;
+        const userId = meta.userId ? `[${String(meta.userId)}]` : '';
+        return `${time} 🔐 ${meta.action || ''} ${userId}`;
       }
 
-      // Default format
-      const contextStr = context ? chalk.gray(`[${String(context)}]`) : '';
-      const correlationStr = correlationId
-        ? chalk.gray(`[${String(correlationId).substring(0, 8)}]`)
-        : '';
+      const contextStr = context ? `[${String(context)}]` : '';
+      const correlationStr = correlationId ? `[${String(correlationId).substring(0, 8)}]` : '';
 
-      // Clean up meta by removing common fields
       const cleanMeta = { ...meta };
       delete cleanMeta.service;
       delete cleanMeta.version;
@@ -147,7 +124,7 @@ const createDevFormat = () => {
 
       const metaStr =
         Object.keys(cleanMeta).length > 0 && level === 'debug'
-          ? chalk.gray(` ${JSON.stringify(cleanMeta, null, 0)}`)
+          ? ` ${JSON.stringify(cleanMeta, null, 0)}`
           : '';
 
       return `${time} ${symbol} ${colorFn(message)} ${contextStr}${correlationStr}${metaStr}`;
