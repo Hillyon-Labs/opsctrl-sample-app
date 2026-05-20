@@ -2,7 +2,7 @@ node: '20'
 
 database:
   type: postgresql
-  migrateCommand: 'npm run migration:run'
+  migrateCommand: 'node node_modules/.bin/typeorm migration:run -d dist/data-source.js'
 
 services:
   redis: true
