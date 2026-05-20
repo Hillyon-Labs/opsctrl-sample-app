@@ -1,0 +1,13 @@
+node: '20'
+
+database:
+  type: postgresql
+  migrateCommand: 'npm run migration:run'
+
+services:
+  redis: true
+
+healthCheck:
+  path: '/health'
+  initialDelaySeconds: 15
+  periodSeconds: 10
