@@ -62,5 +62,3 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Migrations (generated)
-src/migrations/
