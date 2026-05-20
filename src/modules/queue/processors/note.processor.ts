@@ -14,7 +14,9 @@ export class NoteProcessor extends WorkerHost {
   constructor(
     @InjectRepository(Note)
     private readonly notesRepo: Repository<Note>,
-  ) {}
+  ) {
+    super();
+  }
 
   async process(job: Job<{ noteId: string }>): Promise<void> {
     const { noteId } = job.data;
