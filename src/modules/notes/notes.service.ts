@@ -6,7 +6,11 @@ import { Repository } from 'typeorm';
 import { Note } from './entities/note.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
-import { NOTE_PROCESSING_QUEUE } from '../queue/queue.constants';
+import {
+  DEMO_DELAY_MS,
+  LATER_NOTE_PREFIX,
+  NOTE_PROCESSING_QUEUE,
+} from '../queue/queue.constants';
 
 @Injectable()
 export class NotesService {
@@ -22,7 +26,13 @@ export class NotesService {
     const saved = await this.notesRepo.save(note);
 
     // Enqueue background processing job to demonstrate Redis + BullMQ
-    await this.noteQueue.add('process-note', { noteId: saved.id });
+    // A "[later]" note is processed in ten minutes (a Delayed job you can
+    // promote from the OpsCtrl Background jobs page)
+    await this.noteQueue.add(
+      'process-note',
+      { noteId: saved.id },
+      saved.title.startsWith(LATER_NOTE_PREFIX) ? { delay: DEMO_DELAY_MS } : {},
+    );
 
     return saved;
   }
