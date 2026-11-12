@@ -21,6 +21,20 @@ A minimal NestJS application designed to be deployed on [OpsCtrl](https://opsctr
 | `GET` | `/notes/:id` | Get a single note |
 | `PATCH` | `/notes/:id` | Update title or content |
 | `DELETE` | `/notes/:id` | Soft delete a note |
+
+### Try the Background jobs page
+
+Two title prefixes make jobs you can explore on the app's **Background jobs** tab in OpsCtrl:
+
+| Title starts with | What its job does |
+|---|---|
+| `[fail]` | Fails with `Enrichment service unavailable (503)` for the first minute after it's queued, so all 3 automatic attempts fail and it lands in **Failed**. Retry it after a minute and it succeeds. |
+| `[later]` | Is queued 10 minutes in the future, so it sits in **Delayed** until you **Promote** it. |
+
+```bash
+curl -X POST https://<your-app>.opsctrl.dev/notes -H 'Content-Type: application/json' \
+  -d '{"title":"[fail] Sync invoice to accounting","content":"Simulated outage"}'
+```
 | `GET` | `/health` | Health check — DB + Redis |
 
 Interactive docs at `/api/docs` when running locally.
